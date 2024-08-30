@@ -5,16 +5,19 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const app = express();
+export const app = express();
 
-// Conectar ao MongoDB
-connectDB();
+// Conectar ao MongoDB (apenas fora do ambiente de testes)
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 app.use(express.json());
 app.use('/api', router);
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
+}

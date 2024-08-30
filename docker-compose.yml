@@ -30,5 +30,19 @@ services:
     volumes:
       - .:/app
 
+  tests:
+    build: .
+    container_name: reader_backend_tests
+    environment:
+      MONGO_USER: user
+      MONGO_PASS: pass
+      MONGO_DB: TestReader  
+      MONGO_HOST: mongodb
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/app
+    command: yarn test  
+
 volumes:
   mongo-data:
