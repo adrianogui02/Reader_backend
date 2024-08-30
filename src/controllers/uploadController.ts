@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
-import {interactWithImage, extractNumericValue } from "../lib/gemini";
+import { interactWithImage, extractNumericValue } from "../lib/gemini";
 import fs from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { checkExistingReading, saveReading } from "../helpers/dbHelper";
+import { uploadImageToImgur } from "../helpers/imageHelper";
 
 export const uploadController = async (req: Request, res: Response) => {
   const { image, customer_code, measure_datetime, measure_type } = req.body;
@@ -32,6 +33,9 @@ export const uploadController = async (req: Request, res: Response) => {
     const imageBuffer = Buffer.from(image, "base64");
     fs.writeFileSync(tempImagePath, imageBuffer);
 
+    // Fazer upload da imagem para o Imgur e obter a URL
+    const imageUrl = await uploadImageToImgur(image.toString("base64"));
+
     // Interagir com a imagem usando o modelo Gemini Vision
     const caption = await interactWithImage(tempImagePath);
 
@@ -39,10 +43,10 @@ export const uploadController = async (req: Request, res: Response) => {
     const measure_value = extractNumericValue(caption);
 
     // Salvar a leitura no banco de dados
-    await saveReading(customer_code, measure_datetime, measure_type, measure_value, imageId);
+    await saveReading(customer_code, measure_datetime, measure_type, measure_value, imageId, imageUrl);
 
     res.status(200).json({
-      image_url: `https://your-storage-service.com/${imageId}`,
+      image_url: imageUrl,
       measure_value,
       measure_uuid: imageId,
     });

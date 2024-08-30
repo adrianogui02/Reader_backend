@@ -1,37 +1,65 @@
-import { MongoClient } from "mongodb";
-import dotenv from "dotenv";
-import { MONGO_URL } from "../lib/config";
+import Measure from "../models/Measure";
 
-dotenv.config();
+// Verifica se já existe uma leitura no mês para o mesmo tipo
+export const checkExistingReading = async (
+  customer_code: string,
+  measure_datetime: string,
+  measure_type: 'WATER' | 'GAS'
+): Promise<boolean> => {
+  const startOfMonth = new Date(new Date(measure_datetime).setDate(1));
+  const endOfMonth = new Date(new Date(startOfMonth).setMonth(startOfMonth.getMonth() + 1));
 
-const client = new MongoClient(MONGO_URL);
-
-export const checkExistingReading = async (customer_code: string, measure_datetime: string, measure_type: string): Promise<boolean> => {
-  const db = client.db("meter-readings");
-  const readingsCollection = db.collection("readings");
-
-  const existingReading = await readingsCollection.findOne({
+  const existingReading = await Measure.findOne({
     customer_code,
-    measure_datetime: {
-      $gte: new Date(new Date(measure_datetime).setDate(1)),
-      $lt: new Date(new Date(measure_datetime).setMonth(new Date(measure_datetime).getMonth() + 1)),
-    },
+    measure_datetime: { $gte: startOfMonth, $lt: endOfMonth },
     measure_type,
   });
 
   return !!existingReading;
 };
 
-export const saveReading = async (customer_code: string, measure_datetime: string, measure_type: string, measure_value: number, measure_uuid: string): Promise<void> => {
-  const db = client.db("meter-readings");
-  const readingsCollection = db.collection("readings");
-
-  await readingsCollection.insertOne({
+// Salva uma nova leitura no banco de dados
+export const saveReading = async (
+  customer_code: string,
+  measure_datetime: string,
+  measure_type: 'WATER' | 'GAS',
+  measure_value: number,
+  measure_uuid: string,
+  image_url: string
+): Promise<void> => {
+  const newMeasure = new Measure({
     customer_code,
     measure_datetime: new Date(measure_datetime),
     measure_type,
     measure_value,
     measure_uuid,
-    created_at: new Date(),
+    image_url,
+    has_confirmed: false,
   });
+
+  await newMeasure.save();
 };
+
+// Confirma ou corrige um valor lido
+export const confirmReading = async (
+  measure_uuid: string,
+  confirmed_value: number
+): Promise<boolean> => {
+  const measure = await Measure.findOne({ measure_uuid });
+
+  if (!measure) {
+    throw new Error("Leitura não encontrada");
+  }
+
+  if (measure.has_confirmed) {
+    throw new Error("Leitura já confirmada");
+  }
+
+  measure.measure_value = confirmed_value;
+  measure.has_confirmed = true;
+
+  await measure.save();
+
+  return true;
+};
+

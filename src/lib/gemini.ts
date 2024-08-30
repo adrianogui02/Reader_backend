@@ -1,8 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { API_KEY } from "./config";
+import { GEMINI_API_KEY } from "./config";
 import fs from "fs";
 
-const googleAI = new GoogleGenerativeAI(API_KEY);
+const googleAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
   
 const geminiModel = googleAI.getGenerativeModel({

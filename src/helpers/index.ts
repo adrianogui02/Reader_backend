@@ -23,7 +23,7 @@ export const checkExistingReading = async (customer_code: string, measure_type: 
 
 export const callGeminiAPI = async (imageBase64: string) => {
   try {
-    const url = 'https://vision.googleapis.com/v1/images:annotate?key=' + process.env.GOOGLE_API_KEY;
+    const url = 'https://vision.googleapis.com/v1/images:annotate?key=' + process.env.GEMINI_API_KEY;
     const requestBody = {
       requests: [
         {
@@ -61,15 +61,19 @@ export const saveMeasure = async (customer_code: string, measure_datetime: Date,
 };
 
 export const getMeasuresByCustomer = async (customer_code: string, measure_type?: string) => {
-  const query: any = { customer_code };
+  const filter: any = { customer_code };
+
   if (measure_type) {
-    query.measure_type = measure_type;
+    filter.measure_type = measure_type.toUpperCase(); // Garantindo case insensitive
   }
-  return await Measure.find(query);
+
+  const measures = await Measure.find(filter).exec();
+  return measures;
 };
 
+
 export const getReadingByUuid = async (measure_uuid: string) => {
-  return await Measure.findOne({ measure_uuid });
+  return await Measure.findOne({ measure_uuid: measure_uuid });
 };
 
 export const confirmMeasure = async (measure_uuid: string, confirmed_value: number) => {

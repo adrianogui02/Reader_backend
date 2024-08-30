@@ -1,10 +1,14 @@
 import mongoose from 'mongoose';
 
-const dbName = "Reader";
+const dbName = process.env.MONGO_DB || "Reader";
+const dbUser = process.env.MONGO_USER || "user";
+const dbPass = process.env.MONGO_PASS || "pass";
+const dbHost = process.env.MONGO_HOST || "mongodb";
+
 const connectDB = async () => {
   try {
     await mongoose.connect(
-      `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@walletapi.lsfvt4o.mongodb.net/${dbName}`
+      `mongodb://${dbUser}:${dbPass}@${dbHost}:27017/${dbName}?authSource=admin`,
     );
     console.log('MongoDB conectado com sucesso');
   } catch (error) {
