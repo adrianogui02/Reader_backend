@@ -15,7 +15,7 @@ export const interactWithImage = async (filePath: string): Promise<string> => {
       const imageBase64 = fs.readFileSync(filePath).toString("base64");
   
       const promptConfig = [
-        { text: "Extract the numeric value from the image" },
+        { text: "Extract the numerical value of the water/gas meter present in the image" },
         {
           inlineData: {
             mimeType: "image/jpeg",

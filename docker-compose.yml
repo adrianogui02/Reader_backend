@@ -14,6 +14,7 @@ services:
       - mongo-data:/data/db
 
   app:
+    command: yarn dev
     build: .
     container_name: reader_backend
     restart: always
